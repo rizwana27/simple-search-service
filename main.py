@@ -191,3 +191,8 @@ async def search(
         page_size=page_size,
         items=[SearchItem(message=item) for item in page_items],
     )
+@app.get("/")
+def root():
+    return {
+        "message": "Simple Search Service is running. Try /health or /docs."
+    }
