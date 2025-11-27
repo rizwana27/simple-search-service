@@ -7,10 +7,6 @@ import httpx
 from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel
 
-# ------------------------------------
-# Configuration
-# ------------------------------------
-
 # Base URL of the assignment API
 SOURCE_API_BASE_URL = os.getenv(
     "SOURCE_API_BASE_URL",
@@ -20,12 +16,8 @@ SOURCE_API_BASE_URL = os.getenv(
 # Full URL for /messages
 MESSAGES_URL = f"{SOURCE_API_BASE_URL}/messages"
 
-# ------------------------------------
-# Response models
-# ------------------------------------
 
 class SearchItem(BaseModel):
-    # We just wrap the original message object
     message: Dict[str, Any]
 
 
@@ -36,10 +28,6 @@ class SearchResponse(BaseModel):
     page_size: int
     items: List[SearchItem]
 
-
-# ------------------------------------
-# FastAPI app and in-memory index
-# ------------------------------------
 
 app = FastAPI(
     title="Simple Search Service",
@@ -54,10 +42,6 @@ app = FastAPI(
 # ]
 MESSAGE_INDEX: List[Dict[str, Any]] = []
 
-
-# ------------------------------------
-# Helper: build searchable text
-# ------------------------------------
 
 def extract_searchable_text(msg: Dict[str, Any]) -> str:
     """
@@ -84,9 +68,6 @@ def extract_searchable_text(msg: Dict[str, Any]) -> str:
     # Include the actual message text
     parts.append(str(msg.get("message", "")))
 
-    # You could also include timestamp or id if you want, but usually not needed
-    # parts.append(str(msg.get("timestamp", "")))
-
     # Join and lowercase for case-insensitive search
     return " ".join(parts).lower()
 
@@ -99,8 +80,6 @@ async def load_messages_into_index() -> None:
         resp = await client.get(MESSAGES_URL)
         resp.raise_for_status()
         data = resp.json()
-
-    # Your existing logic below is fine:
     if isinstance(data, list):
         raw_messages = data
     elif isinstance(data, dict) and "items" in data:
@@ -117,10 +96,6 @@ async def load_messages_into_index() -> None:
     ]
     print(f"[startup] Indexed {len(MESSAGE_INDEX)} messages")
 
-
-# ------------------------------------
-# Helper: search in memory
-# ------------------------------------
 
 def search_messages(query: str) -> List[Dict[str, Any]]:
     """
@@ -144,19 +119,10 @@ def search_messages(query: str) -> List[Dict[str, Any]]:
     return results
 
 
-# ------------------------------------
-# FastAPI startup event
-# ------------------------------------
-
 @app.on_event("startup")
 async def startup_event() -> None:
-    # When the app starts, load messages and build the index
     await load_messages_into_index()
 
-
-# ------------------------------------
-# Routes
-# ------------------------------------
 
 @app.get("/health")
 async def health() -> Dict[str, Any]:
@@ -172,14 +138,12 @@ async def search(
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
 ) -> SearchResponse:
-    # If index isn't ready yet
     if not MESSAGE_INDEX:
         raise HTTPException(status_code=503, detail="Index not ready. Try again shortly.")
 
     all_results = search_messages(q)
     total = len(all_results)
 
-    # Pagination
     start = (page - 1) * page_size
     end = start + page_size
     page_items = all_results[start:end]
