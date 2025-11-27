@@ -6,7 +6,6 @@ A small Python web service that exposes a '/search' API on top of the November 7
 - **Tech stack**: Python 3.12, FastAPI, httpx, Uvicorn
 - **Goal**: Accept a query string and return a paginated list of matching messages in under 100ms.
 
----
 
 ## How it works
 
@@ -38,7 +37,7 @@ There are no upstream calls per search, so latency is dominated by in-memory loo
 ## GET /search
 Search messages.
 
-Query parameters
+### Query parameters
 
 -q (string, required) – search term, case-insensitive
 
@@ -46,7 +45,7 @@ Query parameters
 
 -page_size (int, default: 10, min: 1, max: 100)
 
-Example
+Example:
 
 GET /search?q=Paris&page=1&page_size=5
 
@@ -94,10 +93,11 @@ Interactive Swagger UI for trying the endpoints.
 ## Requirements
 
 Python 3.12+
+
 pip
 
 
-Steps
+# Steps
 
 # create and activate virtualenv (Windows example)
 python -m venv myenv
@@ -108,6 +108,7 @@ pip install -r requirements.txt
 
 # run the app
 uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
 Then open:
 
 Swagger: http://localhost:8000/docs
@@ -116,7 +117,7 @@ Health: http://localhost:8000/health
 
 Example search: http://localhost:8000/search?q=Paris&page=1&page_size=5
 
-Deployment
+# Deployment
 The app is containerised with Docker and can run on any container platform.
 
 Docker
@@ -139,7 +140,7 @@ Docs: https://simple-search-service-rhxo.onrender.com/docs
 Example search:
 https://simple-search-service-rhxo.onrender.com/search?q=Paris&page=1&page_size=5
 
-Design notes:
+# Design notes:
 
 Messages are fetched once from the upstream /messages endpoint at startup and cached in memory.
 
@@ -147,7 +148,7 @@ Search is a simple case-insensitive token match over user_name + message.
 
 This avoids extra infrastructure like databases or Elasticsearch and is sufficient for a few thousand records.
 
-Latency and potential improvements:
+# Latency and potential improvements:
 
 Current design is already fast because all data lives in memory and there are no upstream calls in the request path.
 
